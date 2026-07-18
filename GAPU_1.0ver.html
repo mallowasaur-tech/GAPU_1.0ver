@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>GoodAni Plus Ultra - 초 울트라 애니메이션 앱</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body {
+      -webkit-user-select: none;
+      user-select: none;
+      touch-action: none;
+      background-color: #020617; /* 몰입형 다크 네이비 */
+    }
+    ::-webkit-scrollbar { height: 8px; width: 8px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    
+    @keyframes gradient-x {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+    .animate-gradient-x {
+      background-size: 200% 200%;
+      animation: gradient-x 3s ease infinite;
+    }
+
+    @keyframes spin-slow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .animate-spin-slow {
+      animation: spin-slow 8s linear infinite;
+    }
+    
+    /* 선택된 프레임 카드 */
+    .selected-card {
+      box-shadow: 0 0 0 4px #22d3ee, 0 0 20px rgba(34, 211, 238, 0.5);
+      transform: scale(1.05);
+    }
+
+    /* 도구 버튼 터치 충돌 버그 방지 */
+    .tool-btn * {
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body class="text-slate-100 font-sans h-screen w-screen flex flex-col overflow-hidden">
+
+  <!-- ================= 1. 초 울트라 인트로 화면 (더욱 화려해진 v1.0 GAPU 에디션) ================= -->
+  <div id="intro-screen" class="fixed inset-0 bg-slate-950 z-[100] flex flex-col items-center justify-center transition-opacity duration-1000 overflow-hidden">
+    <!-- 비주얼 오로라 이펙트 -->
+    <div class="absolute top-10 left-10 w-64 h-64 bg-cyan-500/10 rounded-full blur-[80px] animate-pulse"></div>
+    <div class="absolute bottom-10 right-10 w-80 h-80 bg-purple-600/15 rounded-full blur-[100px] animate-pulse" style="animation-delay: 1s;"></div>
+
+    <div class="flex flex-col items-center max-w-lg px-6 text-center z-10">
+      <div class="relative mb-8">
+        <div class="absolute inset-0 bg-gradient-to-r from-cyan-400 to-pink-500 rounded-3xl blur-xl animate-pulse opacity-50"></div>
+        <!-- 궤도링 -->
+        <div class="absolute -inset-6 border border-cyan-400/20 rounded-full animate-spin-slow border-dashed"></div>
+        
+        <div class="relative w-24 h-24 animate-gradient-x bg-gradient-to-tr from-cyan-600 via-indigo-600 to-purple-600 rounded-3xl flex items-center justify-center shadow-2xl">
+          <i data-lucide="zap" class="text-yellow-300 w-12 h-12 animate-bounce"></i>
+        </div>
+        <span class="absolute -bottom-3 -right-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white text-xs font-black px-3 py-1 rounded-full shadow-lg">v1.0</span>
+      </div>
+
+      <!-- 브랜드 로고 및 텍스트 분리 색상 강조 -->
+      <h1 class="text-4xl md:text-5xl font-black text-slate-100 tracking-tight leading-none mt-2">
+        Good Ani Plus Ultra
+      </h1>
+      
+      <!-- GAPU 이니셜 강조 이펙트 -->
+      <div class="mt-4 text-6xl font-black tracking-widest bg-gradient-to-r from-cyan-400 via-pink-500 to-purple-500 bg-clip-text text-transparent drop-shadow-[0_4px_12px_rgba(236,72,153,0.3)]">
+        GAPU
+      </div>
+
+      <p class="mt-6 text-sm font-extrabold text-slate-400 tracking-wider">
+        누구나 쉽게 그리는 초고성능 애니메이션 스튜디오
+      </p>
+      
+      <!-- 부드러운 로딩 점들 -->
+      <div class="mt-8 flex space-x-3">
+        <div class="w-3.5 h-3.5 bg-cyan-400 rounded-full animate-ping"></div>
+        <div class="w-3.5 h-3.5 bg-pink-500 rounded-full animate-ping [animation-delay:0.2s]"></div>
+        <div class="w-3.5 h-3.5 bg-purple-500 rounded-full animate-ping [animation-delay:0.4s]"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 2. 상단 메뉴바 ================= -->
+  <header class="flex items-center justify-between px-6 py-3 bg-slate-900 border-b border-slate-800 shadow-xl z-30">
+    <div class="flex items-center space-x-4">
+      <div class="flex items-center space-x-2">
+        <i data-lucide="zap" class="w-5 h-5 text-yellow-400 animate-pulse"></i>
+        <span class="text-lg font-black tracking-wider text-slate-200">
+          GoodAni <span class="text-cyan-400">Ultra</span> <span class="text-xs bg-slate-800 text-pink-400 px-2 py-0.5 rounded-full font-bold ml-1">v1.0</span>
+        </span>
+      </div>
+      
+      <div class="flex space-x-2 border-l border-slate-700 pl-4">
+        <button id="btn-export" class="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-500 hover:from-cyan-500 hover:to-blue-400 text-white rounded-xl text-xs font-black transition active:scale-95 shadow-lg shadow-cyan-500/20">
+          <i data-lucide="clapperboard" class="w-4 h-4"></i>
+          <span>MP4 비디오로 저장</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 실행 취소(되돌리기) / 다시 실행 -->
+    <div class="flex items-center space-x-1 bg-slate-950 p-1.5 rounded-xl border border-slate-800 shadow-inner">
+      <button id="btn-undo" class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition" title="되돌리기 (Ctrl+Z)">
+        <i data-lucide="undo-2" class="w-4 h-4"></i>
+      </button>
+      <button id="btn-redo" class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition" title="다시 실행 (Ctrl+Y)">
+        <i data-lucide="redo-2" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <!-- 우측 부가 도구 모음 -->
+    <div class="flex items-center space-x-2">
+      <button id="btn-fullscreen" class="p-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition" title="전체화면 모드 (태블릿 꽉차게)">
+        <i data-lucide="maximize" id="fullscreen-icon" class="w-5 h-5"></i>
+      </button>
+      <button id="btn-grid" class="p-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition" title="가이드 모눈 격자">
+        <i data-lucide="grid-3x3" class="w-5 h-5"></i>
+      </button>
+      <button id="btn-overview" class="p-2.5 rounded-lg bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white transition flex items-center space-x-2 font-bold" title="모아보기 / 선택 모드">
+        <i data-lucide="layout-grid" class="w-5 h-5"></i>
+        <span class="text-xs hidden sm:inline">모아보기 / 선택</span>
+      </button>
+      <button id="btn-help" class="p-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition" title="도움말 설명서">
+        <i data-lucide="help-circle" class="w-5 h-5"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- ================= 3. 메인 작업 영역 ================= -->
+  <div class="flex flex-1 overflow-hidden relative bg-slate-950">
+
+    <!-- 좌측 사이드 드로잉 패널 -->
+    <aside class="w-20 sm:w-24 bg-slate-900 border-r border-slate-800 flex flex-col items-center py-4 space-y-4 z-20 overflow-y-auto shadow-2xl">
+      <div class="flex flex-col space-y-2 w-full px-2" id="tool-container">
+        <button id="tool-pen" data-tool="pen" class="tool-btn p-3 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 text-white flex flex-col items-center justify-center shadow-lg shadow-cyan-500/20">
+          <i data-lucide="pen-tool" class="w-5 h-5"></i>
+          <span class="text-[9px] mt-1 font-bold">초정밀 펜</span>
+        </button>
+        <button id="tool-eraser" data-tool="eraser" class="tool-btn p-3 rounded-xl hover:bg-slate-800 text-slate-400 flex flex-col items-center justify-center">
+          <i data-lucide="eraser" class="w-5 h-5"></i>
+          <span class="text-[9px] mt-1 font-bold">지우개</span>
+        </button>
+        <button id="tool-fill" data-tool="fill" class="tool-btn p-3 rounded-xl hover:bg-slate-800 text-slate-400 flex flex-col items-center justify-center">
+          <i data-lucide="paint-bucket" class="w-5 h-5"></i>
+          <span class="text-[9px] mt-1 font-bold">채우기</span>
+        </button>
+        <button id="tool-select" data-tool="select" class="tool-btn p-3 rounded-xl hover:bg-slate-800 text-slate-400 flex flex-col items-center justify-center">
+          <i data-lucide="lasso" class="w-5 h-5"></i>
+          <span class="text-[9px] mt-1 font-bold">올가미</span>
+        </button>
+        <button id="tool-pan" data-tool="pan" class="tool-btn p-3 rounded-xl hover:bg-slate-800 text-slate-400 flex flex-col items-center justify-center">
+          <i data-lucide="hand" class="w-5 h-5"></i>
+          <span class="text-[9px] mt-1 font-bold">종이이동</span>
+        </button>
+      </div>
+
+      <div class="w-12 h-[1px] bg-slate-800"></div>
+
+      <!-- 색상 변경 스마트 팔레트 -->
+      <div class="flex flex-col items-center space-y-2 w-full px-2">
+        <input type="color" id="color-picker" value="#000000" class="w-11 h-11 rounded-full cursor-pointer border-4 border-slate-700 bg-transparent shadow-lg">
+        <div class="grid grid-cols-3 gap-1.5" id="color-palette"></div>
+      </div>
+
+      <div class="w-12 h-[1px] bg-slate-800"></div>
+
+      <!-- 붓 굵기 슬라이더 -->
+      <div class="flex flex-col items-center w-full px-3 space-y-1">
+        <span class="text-[9px] text-slate-400 font-black">굵기: <span id="thickness-val" class="text-cyan-400">8</span>px</span>
+        <input type="range" id="brush-thickness" min="1" max="100" value="8" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500">
+      </div>
+
+      <div class="w-12 h-[1px] bg-slate-800"></div>
+
+      <!-- 태블릿용 팜 리젝션 & 어니언스킨 -->
+      <div class="flex flex-col items-center w-full px-2.5 space-y-2 text-[10px] font-bold">
+        <button id="btn-pen-only" class="py-2 rounded-xl w-full text-slate-400 bg-slate-800 hover:bg-slate-700 transition">터치 허용</button>
+        <button id="btn-onion" class="py-2 rounded-xl w-full text-black bg-amber-400 hover:bg-amber-300 transition shadow-[0_0_10px_rgba(251,191,36,0.3)]">어니언 ON</button>
+      </div>
+    </aside>
+
+    <!-- 중앙 도화지 영역 (수평 흰 종이가 메인 화면 가득 참) -->
+    <main id="canvas-container" class="flex-1 relative flex items-center justify-center overflow-hidden bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-800 to-slate-950">
+      
+      <!-- 16:9 가로 화이트 도화지 워크스페이스 -->
+      <div id="paper-workspace" class="relative shadow-[0_20px_100px_rgba(0,0,0,0.9)] border-2 border-slate-700 origin-center bg-white" style="width: 1920px; height: 1080px; transform: scale(0.45);">
+        <!-- 실제 브라우저 출력 캔버스 -->
+        <canvas id="main-canvas" width="1920" height="1080" class="absolute top-0 left-0 cursor-crosshair touch-none"></canvas>
+      </div>
+
+      <!-- 미니 줌 컨트롤러 -->
+      <div class="absolute bottom-6 right-6 flex bg-slate-900/95 backdrop-blur-md p-1.5 rounded-2xl border border-slate-700 shadow-2xl">
+        <button id="zoom-out" class="p-3 hover:bg-slate-800 rounded-xl text-slate-300"><i data-lucide="zoom-out"></i></button>
+        <button id="zoom-reset" class="px-4 font-black text-xs text-cyan-400 hover:bg-slate-800 rounded-xl">원래대로</button>
+        <button id="zoom-in" class="p-3 hover:bg-slate-800 rounded-xl text-slate-300"><i data-lucide="zoom-in"></i></button>
+      </div>
+
+      <!-- 전체 프레임 모아보기 및 다중 제어판 -->
+      <div id="overview-screen" class="absolute inset-0 bg-slate-900/95 backdrop-blur-sm z-50 p-6 overflow-y-auto hidden flex-col">
+        <div class="max-w-7xl mx-auto w-full flex-1 flex flex-col">
+          
+          <div class="flex items-center justify-between mb-6 bg-slate-800/80 p-4 rounded-2xl border border-slate-700 shadow-xl">
+            <h2 class="text-2xl font-black flex items-center space-x-3 text-white">
+              <i data-lucide="images" class="text-cyan-400 w-8 h-8"></i>
+              <span>프레임 모아보기 (다중 선택 복사/삭제)</span>
+            </h2>
+            
+            <div class="flex items-center space-x-3">
+              <span class="text-sm font-bold text-slate-400"><span id="selected-count" class="text-cyan-400">0</span>장 선택됨</span>
+              <button id="btn-copy-selected" class="flex items-center space-x-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition">
+                <i data-lucide="copy" class="w-4 h-4"></i> <span>선택 복사</span>
+              </button>
+              <button id="btn-delete-selected" class="flex items-center space-x-2 px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl transition">
+                <i data-lucide="trash-2" class="w-4 h-4"></i> <span>선택 삭제</span>
+              </button>
+              <div class="w-px h-8 bg-slate-600 mx-2"></div>
+              <button id="btn-close-overview" class="px-5 py-2 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl transition">
+                뒤로가기
+              </button>
+            </div>
+          </div>
+          
+          <div id="grid-frame-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 pb-20"></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- 우측 플리파클립 스타일 글로벌 레이어 리스트 -->
+    <aside class="w-56 bg-slate-900 border-l border-slate-800 flex flex-col z-20 shadow-2xl">
+      <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950/60">
+        <span class="font-black text-xs text-slate-300 flex items-center space-x-2">
+          <i data-lucide="layers" class="w-4 h-4 text-purple-400"></i>
+          <span>도면층 (<span id="layer-count">1</span>/10)</span>
+        </span>
+        <div class="flex space-x-1">
+          <button id="btn-delete-layer" class="p-1.5 hover:bg-rose-500/20 rounded-lg text-rose-400 transition" title="선택된 도면층 삭제하기">
+            <i data-lucide="trash" class="w-4 h-4"></i>
+          </button>
+          <button id="btn-add-layer" class="p-1.5 hover:bg-blue-500/20 rounded-lg text-blue-400 transition" title="새 도면층 추가">
+            <i data-lucide="plus" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+      <div id="layer-list" class="flex-1 overflow-y-auto p-3 space-y-3"></div>
+    </aside>
+
+  </div>
+
+  <!-- ================= 4. 하단 애니메이션 타임라인 ================= -->
+  <footer class="h-36 bg-slate-900 border-t border-slate-800 flex flex-col z-20 relative shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+    <div class="flex items-center justify-between px-6 py-2.5 bg-slate-950 border-b border-slate-800">
+      <div class="flex items-center space-x-6">
+        <button id="btn-play" class="w-10 h-10 flex items-center justify-center rounded-full bg-cyan-500 text-black hover:bg-cyan-400 transition active:scale-90 shadow-[0_0_15px_rgba(6,182,212,0.5)]">
+          <i data-lucide="play" class="w-5 h-5 fill-current ml-1"></i>
+        </button>
+        <div class="flex items-center space-x-3 text-xs font-black">
+          <span class="text-slate-400">속도: <span id="fps-val" class="text-cyan-400 text-sm">12</span> FPS</span>
+          <input type="range" id="animation-fps" min="1" max="60" value="12" class="w-32 accent-cyan-500 h-1.5 bg-slate-700 rounded-lg cursor-pointer">
+        </div>
+      </div>
+      
+      <div class="flex items-center space-x-2">
+        <!-- 프레임 복사 버튼 -->
+        <button id="btn-copy-frame" class="flex items-center space-x-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs font-bold transition text-slate-300" title="현재 프레임 복사">
+          <i data-lucide="copy" class="w-4 h-4 text-cyan-400"></i>
+          <span class="hidden sm:inline">복사</span>
+        </button>
+        <!-- 프레임 복제 버튼 -->
+        <button id="btn-duplicate-frame" class="flex items-center space-x-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs font-bold transition text-slate-300" title="이 프레임을 바로 옆에 복제">
+          <i data-lucide="copy-plus" class="w-4 h-4 text-purple-400"></i>
+          <span class="hidden sm:inline">바로 복제</span>
+        </button>
+        <div class="w-px h-5 bg-slate-700 mx-1"></div>
+        <button id="btn-paste-frame" class="flex items-center space-x-1.5 px-4 py-2 bg-slate-800 text-slate-500 rounded-xl text-xs font-black cursor-not-allowed transition" disabled title="복사한 프레임들을 맨 뒤에 추가">
+          <i data-lucide="clipboard-paste" class="w-4 h-4"></i>
+          <span id="paste-text">맨 뒤에 붙여넣기 (<span id="clipboard-count">0</span>)</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 타임라인 프레임 나열 라인 -->
+    <div id="timeline-scroll" class="flex-1 overflow-x-auto flex items-center p-3 space-x-3 bg-slate-900">
+      <div id="timeline-frames" class="flex space-x-3 items-center"></div>
+      <button id="btn-add-frame" class="flex-shrink-0 w-24 h-16 rounded-xl border-2 border-dashed border-slate-600 bg-slate-800/50 flex items-center justify-center hover:border-cyan-400 hover:text-cyan-400 text-slate-500 transition group">
+        <i data-lucide="plus" class="w-6 h-6 group-hover:scale-125 transition-transform"></i>
+      </button>
+    </div>
+  </footer>
+
+  <!-- ================= 모달 영역 ================= -->
+  <!-- 비디오 생성 모달 -->
+  <div id="export-modal" class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl p-10 max-w-md w-full text-center space-y-6 shadow-[0_0_100px_rgba(6,182,212,0.2)]">
+      <div class="relative inline-block">
+        <div class="w-20 h-20 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+        <i data-lucide="clapperboard" class="absolute inset-0 m-auto text-cyan-400 animate-pulse w-8 h-8"></i>
+      </div>
+      <h3 class="text-2xl font-black text-white">초고화질 비디오 렌더링 중</h3>
+      <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden shadow-inner">
+        <div id="export-bar" class="bg-gradient-to-r from-cyan-400 to-blue-500 h-full rounded-full transition-all duration-200" style="width: 0%;"></div>
+      </div>
+      <span id="export-percent" class="text-sm font-black text-cyan-400">0%</span>
+    </div>
+  </div>
+
+  <!-- 울트라 설명서 모달 -->
+  <div id="help-modal" class="fixed inset-0 bg-black/85 flex items-center justify-center z-50 p-4 hidden">
+    <div class="bg-slate-900 rounded-3xl p-8 max-w-2xl w-full border border-slate-700 shadow-2xl space-y-6">
+      <h2 class="text-3xl font-black border-b border-slate-700 pb-4 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500 flex items-center space-x-3">
+        <i data-lucide="zap" class="w-8 h-8 text-yellow-400 animate-bounce"></i>
+        <span>GoodAni Ultra 완벽 가이드</span>
+      </h2>
+      <div class="space-y-5 text-slate-300 text-sm max-h-[50vh] overflow-y-auto pr-4 font-medium leading-relaxed">
+        <p class="border-l-4 border-cyan-500 pl-4 bg-slate-800/50 p-3 rounded-r-xl"><strong>🖥️ 몰입형 전체화면 모드:</strong> 우측 상단 [전체화면] 버튼을 터치하여 사파리/크롬 상단 바까지 지운 뒤 태블릿 전문가용 툴로 사용해 보세요!</p>
+        <p class="border-l-4 border-purple-500 pl-4 bg-slate-800/50 p-3 rounded-r-xl"><strong>✨ 끊김 없는 펜 드로잉:</strong> 베지어 스플라인 중점 매칭 기법을 도입해 거친 손떨림과 부자연스러운 꺾임을 정밀하게 지워내 선이 아주 맑고 윤기 나게 뽑힙니다.</p>
+        <p class="border-l-4 border-indigo-500 pl-4 bg-slate-800/50 p-3 rounded-r-xl"><strong>📋 묶음 프레임 복제 & 붙여넣기:</strong> 모아보기 창에서 원하는 만큼 프레임을 선택하여 복사할 수 있고, 밖으로 나와 타임라인 맨 뒤에 그대로 이어 붙일 수 있어 작업 노가다가 사라집니다.</p>
+        <p class="border-l-4 border-rose-500 pl-4 bg-slate-800/50 p-3 rounded-r-xl"><strong>🔲 진짜 자유곡선 올가미 도구:</strong> 올가미를 선택하고 화면에 곡선을 이쁘게 그리면 해당 모양대로 그림을 깎아서 원하는 곳 어디든 드래그로 끌고 갈 수 있습니다.</p>
+      </div>
+      <button id="btn-close-help" class="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black text-lg rounded-2xl transition shadow-[0_0_20px_rgba(6,182,212,0.4)]">
+        그리기 시작!
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= 5. 이쁜 커스텀 알림/확인 모달 ================= -->
+  <div id="custom-modal" class="fixed inset-0 bg-black/80 z-[150] flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 max-w-sm w-full text-center space-y-4 shadow-2xl">
+      <h4 id="modal-title" class="text-lg font-black text-white">알림</h4>
+      <p id="modal-msg" class="text-sm text-slate-300 leading-relaxed"></p>
+      <div class="flex justify-center space-x-2 pt-2">
+        <button id="modal-cancel-btn" class="px-4 py-2 bg-slate-800 hover:bg-slate-750 text-slate-400 font-bold rounded-xl text-xs hidden">취소</button>
+        <button id="modal-ok-btn" class="px-5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl text-xs">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 6. 초고성능 JavaScript 제어 엔진 ================= -->
+  <script>
+    // ---------------- 글로벌 상태 정의 ----------------
+    let totalLayers = 1;
+    let currentLayerIdx = 0;
+    
+    // 프레임 구조화: 각 프레임은 10개의 레이어 전용 배열 공간을 가집니다.
+    let frames = [{ id: Date.now(), layers: Array(10).fill(null) }];
+    let currentFrameIdx = 0;
+    
+    // 복사 배열 및 멀티 선택 세트
+    let copiedFrames = []; 
+    let selectedFrameIndices = new Set(); 
+
+    let activeTool = 'pen';
+    let drawColor = '#000000';
+    let brushThickness = 8;
+    let isPenOnly = false;
+    let isOnion = true;
+    let isGrid = false;
+    
+    let isPlaying = false;
+    let fps = 12;
+    let playInterval = null;
+
+    let scale = 0.45;
+    let panOffset = { x: 0, y: 0 };
+    let isPanning = false;
+    let panStart = { x: 0, y: 0 };
+
+    // 정밀 그리기 변수
+    let isDrawing = false;
+    let points = []; 
+
+    // 실행취소 및 다시실행 버퍼 배열
+    let undoHistory = [];
+    let redoHistory = [];
+
+    // [자유곡선 올가미 툴 변수]
+    let lassoPoints = []; // 올가미가 그리는 점선 정점 트래킹
+    let selectionBox = null; // 잘라낸 영역 바운딩 박스
+    let isDraggingSelection = false;
+    let dragStartOffset = { x: 0, y: 0 };
+    let selectionImgData = null; // 오려낸 정밀 이미지 데이터 객체
+    let selectionStartPos = { x: 0, y: 0 }; // 원래 비었던 영역 원복용 좌표
+
+    // 오프스크린 드로잉 캔버스 아키텍처 (지우개 및 되돌리기 100% 버그 해결)
+    const offCanvas = document.createElement('canvas');
+    offCanvas.width = 1920;
+    offCanvas.height = 1080;
+    const offCtx = offCanvas.getContext('2d', { willReadFrequently: true });
+
+    const canvas = document.getElementById('main-canvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const workspace = document.getElementById('paper-workspace');
+    const container = document.getElementById('canvas-container');
+
+    const defaultPalette = [
+      '#000000', '#ffffff', '#ff3b30', '#ff9500', '#ffcc00', 
+      '#4cd964', '#5ac8fa', '#007aff', '#5856d6', '#ff2d55',
+      '#8e8e93', '#e5e5ea'
+    ];
+
+    // ---------------- 시스템 안전 커스텀 알림창 ----------------
+    function showCustomAlert(msg, title = "알림") {
+      document.getElementById('modal-title').innerText = title;
+      document.getElementById('modal-msg').innerText = msg;
+      document.getElementById('modal-cancel-btn').classList.add('hidden');
+      const okBtn = document.getElementById('modal-ok-btn');
+      okBtn.onclick = () => {
+        document.getElementById('custom-modal').classList.add('hidden');
+      };
+      document.getElementById('custom-modal').classList.remove('hidden');
+    }
+
+    function showCustomConfirm(msg, title, onConfirm) {
+      document.getElementById('modal-title').innerText = title;
+      document.getElementById('modal-msg').innerText = msg;
+      const cancelBtn = document.getElementById('modal-cancel-btn');
+      cancelBtn.classList.remove('hidden');
+      
+      cancelBtn.onclick = () => {
+        document.getElementById('custom-modal').classList.add('hidden');
+      };
+      
+      const okBtn = document.getElementById('modal-ok-btn');
+      okBtn.onclick = () => {
+        document.getElementById('custom-modal').classList.add('hidden');
+        if (onConfirm) onConfirm();
+      };
+      document.getElementById('custom-modal').classList.remove('hidden');
+    }
+
+    // ---------------- 전체화면 및 반응형 배율 맞춤 ----------------
+    document.getElementById('btn-fullscreen').onclick = () => {
+      const doc = window.document;
+      const docEl = doc.documentElement;
+      
+      const requestFullScreen = docEl.requestFullscreen || docEl.webkitRequestFullScreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
+      const cancelFullScreen = doc.exitFullscreen || doc.webkitExitFullscreen || doc.mozCancelFullScreen || doc.msExitFullscreen;
+      const icon = document.getElementById('fullscreen-icon');
+
+      try {
+        if (!doc.fullscreenElement && !doc.webkitFullscreenElement && !doc.mozFullScreenElement && !doc.msFullscreenElement) {
+          if (requestFullScreen) {
+            requestFullScreen.call(docEl).catch(err => {
+              showCustomAlert("현재 미리보기(아이프레임) 보안 설정에 따라 임베디드 화면에서는 전체화면이 제한됩니다. 메모장 파일로 태블릿 브라우저 창에서 열어 사용하시면 부드럽게 전체화면이 적용됩니다!", "GoodAni 알림");
+            });
+            icon.setAttribute('data-lucide', 'minimize');
+          }
+        } else {
+          if (cancelFullScreen) {
+            cancelFullScreen.call(doc);
+            icon.setAttribute('data-lucide', 'maximize');
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+      lucide.createIcons();
+    };
+
+    function autoScaleWorkspace() {
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      scale = Math.min(w / 1920, h / 1080) * 0.9;
+      panOffset = { x: 0, y: 0 };
+      applyTransform();
+    }
+
+    function applyTransform() {
+      workspace.style.transform = `translate(${panOffset.x}px, ${panOffset.y}px) scale(${scale})`;
+    }
+
+    // ---------------- 오프스크린 구조화 레이어 합성 기술 ----------------
+    function loadActiveLayerToOffscreen() {
+      offCtx.clearRect(0, 0, 1920, 1080);
+      const activeData = frames[currentFrameIdx].layers[currentLayerIdx];
+      if (activeData) {
+        const img = new Image();
+        img.onload = () => {
+          offCtx.drawImage(img, 0, 0);
+          render();
+        };
+        img.src = activeData;
+      } else {
+        render();
+      }
+    }
+
+    function syncOffscreenToLayer() {
+      frames[currentFrameIdx].layers[currentLayerIdx] = offCanvas.toDataURL('image/png');
+    }
+
+    function render() {
+      // 디스플레이 초기화
+      ctx.clearRect(0, 0, 1920, 1080);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, 1920, 1080);
+
+      // 어니언 스킨 (애니메이션 재생 중이 아닐 때만 노출)
+      if (isOnion && !isPlaying && currentFrameIdx > 0) {
+        ctx.globalAlpha = 0.25;
+        const prevFrame = frames[currentFrameIdx - 1];
+        for (let i = 0; i < totalLayers; i++) {
+          const lData = prevFrame.layers[i];
+          if (lData) {
+            const img = new Image();
+            img.src = lData;
+            ctx.drawImage(img, 0, 0);
+          }
+        }
+        ctx.globalAlpha = 1.0;
+      }
+
+      // 글로벌 레이어 병합 출력 (활성화 레이어 아래층들)
+      for (let i = 0; i < currentLayerIdx; i++) {
+        const lData = frames[currentFrameIdx].layers[i];
+        if (lData) {
+          const img = new Image();
+          img.src = lData;
+          ctx.drawImage(img, 0, 0);
+        }
+      }
+
+      // 현재 그리는 오프스크린 캔버스 레이어 마운트
+      ctx.drawImage(offCanvas, 0, 0);
+
+      // 활성화 레이어 윗층들 병합 출력
+      for (let i = currentLayerIdx + 1; i < totalLayers; i++) {
+        const lData = frames[currentFrameIdx].layers[i];
+        if (lData) {
+          const img = new Image();
+          img.src = lData;
+          ctx.drawImage(img, 0, 0);
+        }
+      }
+
+      // 모눈종이 가이드 격자선
+      if (isGrid) {
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.05)';
+        ctx.lineWidth = 1.5;
+        for (let x = 100; x < 1920; x += 100) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 1080); ctx.stroke(); }
+        for (let y = 100; y < 1080; y += 100) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(1920, y); ctx.stroke(); }
+      }
+
+      // [자유곡선 올가미선 그리기 가이드]
+      if (lassoPoints.length > 1 && !selectionImgData) {
+        ctx.beginPath();
+        ctx.setLineDash([8, 8]);
+        ctx.strokeStyle = '#06b6d4';
+        ctx.lineWidth = 3;
+        ctx.moveTo(lassoPoints[0].x, lassoPoints[0].y);
+        for (let i = 1; i < lassoPoints.length; i++) {
+          ctx.lineTo(lassoPoints[i].x, lassoPoints[i].y);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // [도려낸 올가미 이미지 렌더링 및 박스 가이드]
+      if (selectionBox) {
+        if (selectionImgData) {
+          ctx.putImageData(selectionImgData, selectionBox.x, selectionBox.y);
+        }
+        ctx.setLineDash([10, 10]);
+        ctx.strokeStyle = '#06b6d4';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(selectionBox.x, selectionBox.y, selectionBox.w, selectionBox.h);
+        ctx.setLineDash([]);
+      }
+    }
+
+    // ---------------- 실행 취소(되돌리기) 완벽 제어 엔진 ----------------
+    function saveHistory() {
+      undoHistory.push(JSON.stringify({
+        frames: frames,
+        currentFrameIdx: currentFrameIdx,
+        currentLayerIdx: currentLayerIdx,
+        totalLayers: totalLayers
+      }));
+      if (undoHistory.length > 30) undoHistory.shift();
+      redoHistory = [];
+    }
+
+    // ---------------- 터치 펜인식 & 마우스 캡처 드로잉 ----------------
+    function getPointerCoords(e) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: (e.clientX - rect.left) / scale,
+        y: (e.clientY - rect.top) / scale
+      };
+    }
+
+    function handlePointerDown(e) {
+      if (isPenOnly && e.pointerType !== 'pen') return;
+      if (isPlaying) return;
+      
+      e.preventDefault(); 
+      canvas.setPointerCapture(e.pointerId);
+
+      const pos = getPointerCoords(e);
+
+      if (activeTool === 'pan') {
+        isPanning = true;
+        panStart = { x: e.clientX, y: e.clientY };
+        return;
+      }
+
+      saveHistory();
+
+      // [자유곡선 올가미 선택 및 드래그 깎아 가기]
+      if (activeTool === 'select') {
+        if (selectionBox && pos.x >= selectionBox.x && pos.x <= selectionBox.x + selectionBox.w && pos.y >= selectionBox.y && pos.y <= selectionBox.y + selectionBox.h) {
+          isDraggingSelection = true;
+          dragStartOffset = { x: pos.x - selectionBox.x, y: pos.y - selectionBox.y };
+        } else {
+          // 영역 안착 후 새로운 올가미 준비
+          finalizeLasso();
+          lassoPoints = [pos];
+          selectionBox = null;
+        }
+        return;
+      }
+
+      isDrawing = true;
+      points = [pos];
+
+      if (activeTool === 'fill') {
+        floodFill(offCtx, Math.round(pos.x), Math.round(pos.y), drawColor);
+        syncOffscreenToLayer();
+        render();
+        isDrawing = false;
+      } else {
+        offCtx.lineCap = 'round';
+        offCtx.lineJoin = 'round';
+        offCtx.lineWidth = brushThickness;
+        offCtx.globalCompositeOperation = activeTool === 'eraser' ? 'destination-out' : 'source-over';
+        offCtx.strokeStyle = activeTool === 'eraser' ? 'rgba(0,0,0,1)' : drawColor;
+        
+        offCtx.beginPath();
+        offCtx.arc(pos.x, pos.y, brushThickness/4, 0, Math.PI * 2);
+        offCtx.fillStyle = offCtx.strokeStyle;
+        offCtx.fill();
+        offCtx.beginPath();
+        offCtx.moveTo(pos.x, pos.y);
+        render();
+      }
+    }
+
+    function handlePointerMove(e) {
+      if (isPanning) {
+        const dx = e.clientX - panStart.x;
+        const dy = e.clientY - panStart.y;
+        panOffset.x += dx; panOffset.y += dy;
+        panStart = { x: e.clientX, y: e.clientY };
+        applyTransform();
+        return;
+      }
+
+      const pos = getPointerCoords(e);
+
+      // [올가미 자유곡선 이동 제어]
+      if (activeTool === 'select') {
+        if (isDraggingSelection && selectionBox) {
+          selectionBox.x = pos.x - dragStartOffset.x;
+          selectionBox.y = pos.y - dragStartOffset.y;
+          render();
+        } else if (lassoPoints.length > 0) {
+          lassoPoints.push(pos);
+          render();
+        }
+        return;
+      }
+
+      if (!isDrawing) return;
+      if (isPenOnly && e.pointerType !== 'pen') return;
+
+      if (activeTool === 'pen' || activeTool === 'eraser') {
+        points.push(pos);
+        
+        // Midpoint Bezier Spline 보간 (선 꼬임 방지)
+        if (points.length >= 3) {
+          const p1 = points[points.length - 3];
+          const p2 = points[points.length - 2];
+          const p3 = points[points.length - 1];
+          
+          const mid1 = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+          const mid2 = { x: (p2.x + p3.x) / 2, y: (p2.y + p3.y) / 2 };
+          
+          offCtx.beginPath();
+          offCtx.moveTo(mid1.x, mid1.y);
+          offCtx.quadraticCurveTo(p2.x, p2.y, mid2.x, mid2.y);
+          offCtx.stroke();
+          render();
+        }
+      }
+    }
+
+    function handlePointerUp(e) {
+      isPanning = false;
+      canvas.releasePointerCapture(e.pointerId);
+
+      // [올가미 자유곡선 닫기 및 마스크 도려내기]
+      if (activeTool === 'select') {
+        if (isDraggingSelection) {
+          isDraggingSelection = false;
+        } else if (lassoPoints.length > 2) {
+          lassoPoints.push(lassoPoints[0]); // 루프 닫기
+
+          // 자유곡선 폴리곤 최소/최대 좌표 검사 (바운딩박스)
+          let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+          lassoPoints.forEach(p => {
+            if (p.x < minX) minX = p.x;
+            if (p.y < minY) minY = p.y;
+            if (p.x > maxX) maxX = p.x;
+            if (p.y > maxY) maxY = p.y;
+          });
+
+          const w = maxX - minX;
+          const h = maxY - minY;
+
+          if (w > 5 && h > 5) {
+            // 마스크 영역 연산용 헬퍼 캔버스 생성
+            const maskCanvas = document.createElement('canvas');
+            maskCanvas.width = 1920;
+            maskCanvas.height = 1080;
+            const mCtx = maskCanvas.getContext('2d');
+
+            // 1. 헬퍼 캔버스에 자유곡선 마스크 채우기
+            mCtx.fillStyle = '#ffffff';
+            mCtx.beginPath();
+            mCtx.moveTo(lassoPoints[0].x, lassoPoints[0].y);
+            for (let i = 1; i < lassoPoints.length; i++) {
+              mCtx.lineTo(lassoPoints[i].x, lassoPoints[i].y);
+            }
+            mCtx.closePath();
+            mCtx.fill();
+
+            // 2. 마스크를 얹어서 그림 추출
+            mCtx.globalCompositeOperation = 'source-in';
+            mCtx.drawImage(offCanvas, 0, 0);
+
+            // 3. 도려낸 영역 이미지만 임시 보관
+            selectionImgData = mCtx.getImageData(minX, minY, w, h);
+            selectionStartPos = { x: minX, y: minY };
+
+            // 4. 원본 오프스크린에서 자유곡선 내부 지우기 (Destination-Out)
+            offCtx.save();
+            offCtx.globalCompositeOperation = 'destination-out';
+            offCtx.fillStyle = 'rgba(0,0,0,1)';
+            offCtx.beginPath();
+            offCtx.moveTo(lassoPoints[0].x, lassoPoints[0].y);
+            for (let i = 1; i < lassoPoints.length; i++) {
+              offCtx.lineTo(lassoPoints[i].x, lassoPoints[i].y);
+            }
+            offCtx.closePath();
+            offCtx.fill();
+            offCtx.restore();
+
+            syncOffscreenToLayer();
+
+            // 가이드 사각형 배정
+            selectionBox = { x: minX, y: minY, w: w, h: h };
+          } else {
+            lassoPoints = [];
+            selectionBox = null;
+          }
+        }
+        render();
+        return;
+      }
+
+      if (!isDrawing) return;
+      isDrawing = false;
+      offCtx.globalCompositeOperation = 'source-over'; // 합성 초기화
+
+      syncOffscreenToLayer();
+      render();
+      points = [];
+    }
+
+    canvas.addEventListener('pointerdown', handlePointerDown);
+    canvas.addEventListener('pointermove', handlePointerMove);
+    canvas.addEventListener('pointerup', handlePointerUp);
+    canvas.addEventListener('pointercancel', handlePointerUp);
+
+    // ---------------- 핀치 제스처 (태블릿 확대/축소) ----------------
+    let startDist = 0;
+    container.addEventListener('touchstart', e => {
+      if (e.touches.length === 2) {
+        startDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      }
+    });
+    container.addEventListener('touchmove', e => {
+      if (e.touches.length === 2 && startDist > 0) {
+        e.preventDefault();
+        const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+        scale = Math.min(Math.max(0.2, scale * (dist / startDist)), 4.0);
+        startDist = dist;
+        applyTransform();
+      }
+    });
+    container.addEventListener('wheel', e => {
+      e.preventDefault();
+      scale = Math.min(Math.max(0.15, scale * (e.deltaY < 0 ? 1.08 : 0.92)), 4.0);
+      applyTransform();
+    }, { passive: false });
+
+    // ---------------- 스마트 컬러 팔레트 구성 ----------------
+    const palContainer = document.getElementById('color-palette');
+    defaultPalette.forEach(c => {
+      const pBtn = document.createElement('button');
+      pBtn.className = "w-5 h-5 rounded-full border-2 border-slate-700 hover:scale-125 transition-transform shadow";
+      pBtn.style.backgroundColor = c;
+      pBtn.onclick = () => { drawColor = c; document.getElementById('color-picker').value = c; };
+      palContainer.appendChild(pBtn);
+    });
+
+    document.getElementById('color-picker').onchange = e => drawColor = e.target.value;
+    document.getElementById('brush-thickness').oninput = e => {
+      brushThickness = parseInt(e.target.value);
+      document.getElementById('thickness-val').innerText = brushThickness;
+    };
+
+    // ---------------- 플리파클립 스타일 통합 레이어 엔진 ----------------
+    function renderLayers() {
+      const lc = document.getElementById('layer-list');
+      lc.innerHTML = '';
+      document.getElementById('layer-count').innerText = totalLayers;
+
+      for (let i = 0; i < totalLayers; i++) {
+        const lData = frames[currentFrameIdx].layers[i];
+        const d = document.createElement('div');
+        d.className = `flex items-center justify-between p-3 rounded-xl cursor-pointer border transition ${i === currentLayerIdx ? 'bg-indigo-900/40 border-indigo-500 shadow-md' : 'bg-slate-800 border-slate-700 hover:bg-slate-700'}`;
+        d.innerHTML = `
+          <span class="text-xs font-bold ${i === currentLayerIdx ? 'text-white' : 'text-slate-400'}">도면층 ${i + 1}</span>
+          <div class="w-10 h-10 bg-white rounded-lg border border-slate-600 flex items-center justify-center overflow-hidden bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAAXNSR0IArs4c6QAAACVJREFUKFNjZCASMDKgAnv37v3PTE7MoJqBUc2gmoE0M4i0hQEAsiYTEQYV3Q8AAAAASUVORK5CYII=')]">
+            ${lData ? `<img src="${lData}" class="w-full h-full object-cover">` : ``}
+          </div>
+        `;
+        
+        d.onclick = () => {
+          finalizeLasso();
+          syncOffscreenToLayer();
+          currentLayerIdx = i;
+          loadActiveLayerToOffscreen();
+          renderLayers();
+        };
+        lc.insertBefore(d, lc.firstChild);
+      }
+    }
+
+    document.getElementById('btn-add-layer').onclick = () => {
+      if (totalLayers >= 10) {
+        showCustomAlert("프로 수준의 최적화를 위해 도면층은 최대 10개까지 추가 가능합니다.", "레이어 안내");
+        return;
+      }
+      finalizeLasso();
+      saveHistory();
+      syncOffscreenToLayer();
+      
+      totalLayers++;
+      currentLayerIdx = totalLayers - 1;
+      
+      loadActiveLayerToOffscreen();
+      renderLayers();
+    };
+
+    document.getElementById('btn-delete-layer').onclick = () => {
+      if (totalLayers <= 1) {
+        showCustomAlert("최소 1개의 도면층은 항상 존재해야 합니다.", "도면 삭제 불가");
+        return;
+      }
+      
+      showCustomConfirm(`현재 선택된 [도면층 ${currentLayerIdx + 1}]을 모든 프레임에서 완전히 삭제하시겠습니까?`, "레이어 삭제", () => {
+        finalizeLasso();
+        saveHistory();
+        
+        frames.forEach(frame => {
+          frame.layers.splice(currentLayerIdx, 1);
+          frame.layers.push(null);
+        });
+
+        totalLayers--;
+        currentLayerIdx = Math.min(currentLayerIdx, totalLayers - 1);
+        
+        loadActiveLayerToOffscreen();
+        renderLayers();
+      });
+    };
+
+    // ---------------- 타임라인 및 프레임 조작 ----------------
+    function renderTimeline() {
+      const tc = document.getElementById('timeline-frames');
+      tc.innerHTML = '';
+      frames.forEach((f, idx) => {
+        const d = document.createElement('div');
+        d.className = `flex-shrink-0 w-28 h-16 rounded-xl cursor-pointer flex items-end justify-center pb-1 text-xs font-black transition border-2 group ${idx === currentFrameIdx ? 'border-cyan-400 scale-105 shadow-[0_0_15px_rgba(6,182,212,0.3)] z-10' : 'border-slate-700 bg-slate-800'}`;
+        d.style.backgroundColor = '#ffffff';
+        
+        if (f.layers[0] || f.layers[1] || f.layers[2]) {
+          const firstExisting = f.layers.find(l => l !== null);
+          if (firstExisting) {
+            d.style.backgroundImage = `url(${firstExisting})`;
+            d.style.backgroundSize = 'cover';
+          }
+        }
+        
+        d.innerHTML = `
+          <span class="bg-slate-900/90 text-white px-2.5 py-0.5 rounded-full text-[10px] shadow">${idx + 1}</span>
+          ${frames.length > 1 ? `<button class="absolute top-1 right-1 bg-rose-500 text-white rounded p-0.5 opacity-0 group-hover:opacity-100" onclick="event.stopPropagation(); deleteFrame(${idx})"><i data-lucide="x" class="w-3 h-3"></i></button>` : ''}
+        `;
+        
+        d.onclick = () => {
+          finalizeLasso();
+          syncOffscreenToLayer();
+          currentFrameIdx = idx;
+          loadActiveLayerToOffscreen();
+          renderTimeline();
+          renderLayers();
+        };
+        tc.appendChild(d);
+      });
+      lucide.createIcons();
+    }
+
+    window.deleteFrame = (idx) => {
+      if (frames.length <= 1) return;
+      finalizeLasso();
+      saveHistory();
+      frames.splice(idx, 1);
+      currentFrameIdx = Math.min(currentFrameIdx, frames.length - 1);
+      loadActiveLayerToOffscreen();
+      renderTimeline();
+      renderLayers();
+    };
+
+    document.getElementById('btn-add-frame').onclick = () => {
+      finalizeLasso();
+      saveHistory();
+      syncOffscreenToLayer();
+      
+      frames.push({ id: Date.now(), layers: Array(10).fill(null) });
+      currentFrameIdx = frames.length - 1;
+      
+      loadActiveLayerToOffscreen();
+      renderTimeline();
+      renderLayers();
+      document.getElementById('timeline-scroll').scrollLeft = 9999;
+    };
+
+    document.getElementById('btn-duplicate-frame').onclick = () => {
+      finalizeLasso();
+      saveHistory();
+      syncOffscreenToLayer();
+      
+      const clone = JSON.parse(JSON.stringify(frames[currentFrameIdx]));
+      clone.id = Date.now();
+      frames.splice(currentFrameIdx + 1, 0, clone);
+      currentFrameIdx++;
+      
+      loadActiveLayerToOffscreen();
+      renderTimeline();
+      renderLayers();
+    };
+
+    // ---------------- 프레임 복사 & 연속 붙여넣기 ----------------
+    document.getElementById('btn-copy-frame').onclick = () => {
+      finalizeLasso();
+      syncOffscreenToLayer();
+      copiedFrames = [JSON.parse(JSON.stringify(frames[currentFrameIdx]))];
+      updatePasteButton();
+    };
+
+    function updatePasteButton() {
+      const btn = document.getElementById('btn-paste-frame');
+      const text = document.getElementById('paste-text');
+      const count = document.getElementById('clipboard-count');
+      
+      count.innerText = copiedFrames.length;
+      if (copiedFrames.length > 0) {
+        btn.disabled = false;
+        btn.className = "flex items-center space-x-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-black transition shadow-[0_0_10px_rgba(79,70,229,0.4)]";
+        text.innerHTML = `맨 뒤에 붙여넣기 (<span id="clipboard-count">${copiedFrames.length}</span>)`;
+      } else {
+        btn.disabled = true;
+        btn.className = "flex items-center space-x-1.5 px-4 py-2 bg-slate-800 text-slate-500 rounded-xl text-xs font-black cursor-not-allowed transition";
+      }
+    }
+
+    document.getElementById('btn-paste-frame').onclick = () => {
+      if (copiedFrames.length === 0) return;
+      finalizeLasso();
+      saveHistory();
+      syncOffscreenToLayer();
+
+      copiedFrames.forEach(f => {
+        const clone = JSON.parse(JSON.stringify(f));
+        clone.id = Date.now() + Math.random();
+        frames.push(clone);
+      });
+
+      currentFrameIdx = frames.length - 1;
+      loadActiveLayerToOffscreen();
+      renderTimeline();
+      renderLayers();
+      document.getElementById('timeline-scroll').scrollLeft = 9999;
+
+      const btn = document.getElementById('btn-paste-frame');
+      const text = document.getElementById('paste-text');
+      text.innerHTML = `<i data-lucide="check" class="w-4 h-4 inline"></i> 추가 완료!`;
+      lucide.createIcons();
+      
+      setTimeout(() => {
+        updatePasteButton();
+      }, 1000); 
+    };
+
+    // ---------------- 모아보기 다중 제어 기술 ----------------
+    function updateOverviewSelectedUI() {
+      document.getElementById('selected-count').innerText = selectedFrameIndices.size;
+      const cards = document.querySelectorAll('.overview-card');
+      cards.forEach((card, idx) => {
+        if (selectedFrameIndices.has(idx)) {
+          card.classList.add('selected-card');
+          card.querySelector('.check-icon').classList.remove('hidden');
+        } else {
+          card.classList.remove('selected-card');
+          card.querySelector('.check-icon').classList.add('hidden');
+        }
+      });
+    }
+
+    document.getElementById('btn-overview').onclick = () => {
+      finalizeLasso();
+      syncOffscreenToLayer();
+      selectedFrameIndices.clear();
+      const cont = document.getElementById('grid-frame-container');
+      cont.innerHTML = '';
+      
+      frames.forEach((f, i) => {
+        const card = document.createElement('div');
+        card.className = "overview-card relative group bg-slate-800 rounded-2xl p-2 cursor-pointer transition-all duration-200 border-2 border-transparent hover:border-slate-600";
+        card.innerHTML = `
+          <div class="aspect-video bg-white rounded-xl overflow-hidden relative shadow-inner pointer-events-none">
+            ${f.layers.map(l => l ? `<img src="${l}" class="absolute inset-0 w-full h-full object-contain">` : '').join('')}
+          </div>
+          <div class="mt-3 flex justify-between items-center px-1">
+            <span class="text-xs font-black text-slate-300"># ${i + 1} 프레임</span>
+            <button class="bg-cyan-600 text-white text-[10px] px-2 py-1 rounded shadow hover:bg-cyan-500 z-10 font-bold" onclick="event.stopPropagation(); jumpToFrame(${i})">그리기</button>
+          </div>
+          <div class="check-icon hidden absolute -top-3 -right-3 bg-blue-500 text-white rounded-full p-1 shadow-lg border-2 border-slate-900">
+            <i data-lucide="check" class="w-4 h-4"></i>
+          </div>
+        `;
+        card.onclick = () => {
+          if (selectedFrameIndices.has(i)) selectedFrameIndices.delete(i);
+          else selectedFrameIndices.add(i);
+          updateOverviewSelectedUI();
+        };
+        cont.appendChild(card);
+      });
+      lucide.createIcons();
+      updateOverviewSelectedUI();
+      document.getElementById('overview-screen').classList.remove('hidden');
+      document.getElementById('overview-screen').classList.add('flex');
+    };
+
+    window.jumpToFrame = (idx) => {
+      currentFrameIdx = idx;
+      currentLayerIdx = 0;
+      document.getElementById('btn-close-overview').click();
+      loadActiveLayerToOffscreen();
+      renderTimeline();
+      renderLayers();
+    };
+
+    document.getElementById('btn-close-overview').onclick = () => {
+      document.getElementById('overview-screen').classList.add('hidden');
+      document.getElementById('overview-screen').classList.remove('flex');
+    };
+
+    document.getElementById('btn-copy-selected').onclick = () => {
+      if (selectedFrameIndices.size === 0) {
+        showCustomAlert("복사할 프레임을 먼저 터치하여 선택해주세요!", "선택 안내");
+        return;
+      }
+      copiedFrames = Array.from(selectedFrameIndices).sort((a,b)=>a-b).map(i => frames[i]);
+      updatePasteButton();
+      showCustomAlert(`${copiedFrames.length}장의 프레임이 복사되었습니다.\n\n뒤로가기를 눌러 나가신 뒤, 우측 하단의 [맨 뒤에 붙여넣기]를 눌러주세요!`, "복사 완료");
+    };
+
+    document.getElementById('btn-delete-selected').onclick = () => {
+      if (selectedFrameIndices.size === 0) return;
+      if (frames.length - selectedFrameIndices.size < 1) {
+        showCustomAlert("최소 1장의 프레임은 남겨두어야 합니다!", "삭제 불가");
+        return;
+      }
+      
+      showCustomConfirm(`선택한 ${selectedFrameIndices.size}장의 프레임을 삭제하시겠습니까?`, "프레임 선택 삭제", () => {
+        saveHistory();
+        const indicesToRemove = Array.from(selectedFrameIndices).sort((a,b) => b-a);
+        indicesToRemove.forEach(idx => frames.splice(idx, 1));
+        
+        currentFrameIdx = Math.min(currentFrameIdx, frames.length - 1);
+        document.getElementById('btn-overview').click(); 
+        loadActiveLayerToOffscreen();
+        renderTimeline();
+      });
+    };
+
+    // ---------------- 애니메이션 실시간 재생 제어 ----------------
+    document.getElementById('btn-play').onclick = (e) => {
+      finalizeLasso();
+      syncOffscreenToLayer();
+      isPlaying = !isPlaying;
+      const btn = e.currentTarget;
+      
+      if (isPlaying) {
+        btn.className = "w-10 h-10 flex items-center justify-center rounded-full bg-rose-500 text-white shadow-[0_0_15px_rgba(244,63,94,0.5)] transition active:scale-90";
+        btn.innerHTML = `<i data-lucide="square" class="w-4 h-4 fill-current"></i>`;
+        
+        playInterval = setInterval(() => {
+          currentFrameIdx = (currentFrameIdx + 1) % frames.length;
+          loadActiveLayerToOffscreen();
+          renderTimeline();
+        }, 1000 / fps);
+      } else {
+        btn.className = "w-10 h-10 flex items-center justify-center rounded-full bg-cyan-500 text-black shadow-[0_0_15px_rgba(6,182,212,0.5)] hover:bg-cyan-400 transition active:scale-90";
+        btn.innerHTML = `<i data-lucide="play" class="w-5 h-5 fill-current ml-1"></i>`;
+        clearInterval(playInterval);
+      }
+      lucide.createIcons();
+    };
+
+    document.getElementById('animation-fps').oninput = e => {
+      fps = parseInt(e.target.value);
+      document.getElementById('fps-val').innerText = fps;
+      if (isPlaying) {
+        clearInterval(playInterval);
+        playInterval = setInterval(() => { 
+          currentFrameIdx = (currentFrameIdx + 1) % frames.length; 
+          loadActiveLayerToOffscreen(); 
+          renderTimeline(); 
+        }, 1000 / fps);
+      }
+    };
+
+    // ---------------- MP4 비디오 렌더링 파일 추출 기능 ----------------
+    document.getElementById('btn-export').onclick = async () => {
+      if (frames.length < 2) {
+        showCustomAlert("영상을 만드려면 최소 2장 이상의 프레임이 필요합니다!", "출력 안내");
+        return;
+      }
+      finalizeLasso();
+      syncOffscreenToLayer();
+
+      const modal = document.getElementById('export-modal'), bar = document.getElementById('export-bar'), percent = document.getElementById('export-percent');
+      modal.classList.remove('hidden'); bar.style.width = '5%'; percent.innerText = '준비 중...';
+
+      try {
+        const tCan = document.createElement('canvas'); tCan.width = 1920; tCan.height = 1080; const tCtx = tCan.getContext('2d');
+        const fImgs = await Promise.all(frames.map(async (f, i) => {
+          const imgs = await Promise.all(f.layers.map(l => l ? new Promise(r => { const img = new Image(); img.onload = ()=>r(img); img.onerror = ()=>r(null); img.src = l; }) : null));
+          const p = Math.round(10 + (i / frames.length) * 40); bar.style.width = `${p}%`; percent.innerText = `${p}% 이미지 렌더링 중...`;
+          return imgs;
+        }));
+
+        const stream = tCan.captureStream(fps);
+        let mime = MediaRecorder.isTypeSupported('video/mp4') ? 'video/mp4' : 'video/webm';
+        const recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 8000000 });
+        const chunks = [];
+        recorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+
+        const finishPromise = new Promise(resolve => {
+          recorder.onstop = () => {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob(chunks, { type: mime }));
+            a.download = `GoodAni_Ultra_${Date.now()}.${mime.includes('mp4') ? 'mp4' : 'webm'}`;
+            a.click(); resolve();
+          };
+        });
+
+        recorder.start();
+        for (let i = 0; i < fImgs.length; i++) {
+          tCtx.fillStyle = '#fff'; tCtx.fillRect(0, 0, 1920, 1080);
+          fImgs[i].forEach(img => { if (img) tCtx.drawImage(img, 0, 0); });
+          const p = Math.round(50 + (i / fImgs.length) * 45); bar.style.width = `${p}%`; percent.innerText = `${p}% 비디오 빌딩 중...`;
+          await new Promise(r => setTimeout(r, 1000 / fps));
+        }
+        recorder.stop(); await finishPromise;
+        
+        bar.style.width = '100%'; percent.innerText = '100% 저장 완료!';
+        setTimeout(() => modal.classList.add('hidden'), 1000);
+      } catch (err) {
+        console.error(err); 
+        showCustomAlert("비디오 변환 중 치명적인 브라우저 미디어 프레임 오류가 감지되었습니다.", "녹화 오류");
+        modal.classList.add('hidden');
+      }
+    };
+
+    // ---------------- 올가미 도구 안착 함수 ----------------
+    function finalizeLasso() {
+      if (selectionImgData && selectionBox) {
+        offCtx.putImageData(selectionImgData, selectionBox.x, selectionBox.y);
+        syncOffscreenToLayer();
+        selectionImgData = null;
+        selectionBox = null;
+        lassoPoints = [];
+        render();
+      }
+    }
+
+    // ---------------- [이벤트 바인딩 핵심 패치] ----------------
+    // 태블릿 터치 스와이프 및 클릭 지연을 완전 파괴하는 견고한 리스너 바인딩
+    document.querySelectorAll('.tool-btn').forEach(btn => {
+      const handleToolSelect = (e) => {
+        e.preventDefault();
+        finalizeLasso();
+
+        document.querySelectorAll('.tool-btn').forEach(b => {
+          b.className = "tool-btn p-3 rounded-xl hover:bg-slate-800 text-slate-400 flex flex-col items-center justify-center";
+        });
+        
+        btn.className = "tool-btn p-3 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 text-white flex flex-col items-center justify-center shadow-lg shadow-cyan-500/30";
+        activeTool = btn.dataset.tool;
+        selectionBox = null;
+        render();
+      };
+
+      // PointerDown 및 Click을 동시에 묶어 태블릿에서 선제적이고 즉각적인 터치가 이루어지도록 유연화
+      btn.addEventListener('pointerdown', handleToolSelect);
+    });
+
+    // ---------------- 공통 초기화 리스너 ----------------
+    document.getElementById('btn-undo').onclick = () => { 
+      if (undoHistory.length) { 
+        redoHistory.push(JSON.stringify({
+          frames: frames,
+          currentFrameIdx: currentFrameIdx,
+          currentLayerIdx: currentLayerIdx,
+          totalLayers: totalLayers
+        }));
+        
+        const checkpoint = JSON.parse(undoHistory.pop());
+        frames = checkpoint.frames;
+        currentFrameIdx = checkpoint.currentFrameIdx;
+        currentLayerIdx = checkpoint.currentLayerIdx;
+        totalLayers = checkpoint.totalLayers;
+
+        loadActiveLayerToOffscreen();
+        renderTimeline();
+        renderLayers();
+      } 
+    };
+
+    document.getElementById('btn-redo').onclick = () => { 
+      if (redoHistory.length) { 
+        undoHistory.push(JSON.stringify({
+          frames: frames,
+          currentFrameIdx: currentFrameIdx,
+          currentLayerIdx: currentLayerIdx,
+          totalLayers: totalLayers
+        }));
+        
+        const checkpoint = JSON.parse(redoHistory.pop());
+        frames = checkpoint.frames;
+        currentFrameIdx = checkpoint.currentFrameIdx;
+        currentLayerIdx = checkpoint.currentLayerIdx;
+        totalLayers = checkpoint.totalLayers;
+
+        loadActiveLayerToOffscreen();
+        renderTimeline();
+        renderLayers();
+      } 
+    };
+    
+    document.getElementById('btn-help').onclick = () => document.getElementById('help-modal').classList.remove('hidden');
+    document.getElementById('btn-close-help').onclick = () => document.getElementById('help-modal').classList.add('hidden');
+
+    document.getElementById('zoom-in').onclick = () => { scale = Math.min(4.0, scale + 0.1); applyTransform(); };
+    document.getElementById('zoom-out').onclick = () => { scale = Math.max(0.15, scale - 0.1); applyTransform(); };
+    document.getElementById('zoom-reset').onclick = () => autoScaleWorkspace();
+
+    // 단축키 연동
+    window.addEventListener('keydown', e => {
+      if (e.ctrlKey && e.key.toLowerCase() === 'z') { e.preventDefault(); document.getElementById('btn-undo').click(); }
+      if (e.ctrlKey && e.key.toLowerCase() === 'y') { e.preventDefault(); document.getElementById('btn-redo').click(); }
+    });
+
+    window.onload = () => {
+      autoScaleWorkspace(); 
+      loadActiveLayerToOffscreen();
+      renderTimeline(); 
+      renderLayers(); 
+      lucide.createIcons();
+      
+      setTimeout(() => { 
+        const intro = document.getElementById('intro-screen'); 
+        intro.classList.add('opacity-0'); 
+        setTimeout(() => intro.remove(), 1000); 
+      }, 3500); 
+    };
+  </script>
+</body>
+</html>
